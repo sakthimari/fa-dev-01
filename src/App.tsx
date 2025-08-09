@@ -1,47 +1,39 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+import AppProvidersWrapper from "./components/wrappers/AppProvidersWrapper"
+import configureFakeBackend from "./helpers/fake-backend"
+import AppRouter from "./routes/router"
+import { Amplify } from 'aws-amplify';
 
-import { useAuthenticator } from '@aws-amplify/ui-react';
+import { Authenticator } from '@aws-amplify/ui-react'
+import outputs from '../amplify_outputs.json';
+import '@aws-amplify/ui-react/styles.css'
 
-const client = generateClient<Schema>();
+Amplify.configure(outputs);
+
+import '@/assets/scss/style.scss'
+
+
+configureFakeBackend()
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
-    const { user, signOut } = useAuthenticator();
+  
 
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
 
   return (
-    <main>
-      <h1>Welcome {user?.signInDetails?.loginId}!</h1>
-      <h2>Todo List</h2>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
-
-      <button onClick={signOut}>Sign out</button>
-    </main>
-  );
+              <Authenticator signUpAttributes={[ 
+                  'email',            // Default attribute
+                  'name',     // Default attribute,                  
+                  'birthdate'         // Default attribute
+              ]} 
+              >
+                  <main>
+                    <AppProvidersWrapper>
+                      <AppRouter />
+                    </AppProvidersWrapper>
+                  </main>
+            </Authenticator>
+        
+         )
 }
 
-export default App;
+export default App

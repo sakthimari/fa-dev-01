@@ -12,6 +12,43 @@ const schema = a.schema({
       content: a.string(),
     })
     .authorization((allow) => [allow.owner()]),
+  
+  UserProfile: a
+    .model({
+      firstName: a.string(),
+      lastName: a.string(),
+      email: a.string(),
+      phone: a.string(),
+      birthday: a.string(),
+      gender: a.string(),
+      bio: a.string(),
+      location: a.string(),
+      website: a.string(),
+      profession: a.string(),
+      company: a.string(),
+      coverPhotoUrl: a.string(),
+      profilePhotoUrl: a.string(),
+      coverPhotoKey: a.string(),
+      profilePhotoKey: a.string(),
+      joinDate: a.string(),
+    })
+    .authorization((allow) => [allow.owner()]),
+
+  Post: a
+    .model({
+      content: a.string(),
+      imageKeys: a.string().array(),
+      imageUrls: a.string().array(),
+      authorId: a.string(),
+      authorName: a.string(),
+      authorProfilePhoto: a.string(),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+      likes: a.integer().default(0),
+      comments: a.integer().default(0),
+    })
+    .authorization((allow) => [allow.owner(), allow.authenticated().to(["read"])])
+    .secondaryIndexes((index) => [index("authorId")]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
