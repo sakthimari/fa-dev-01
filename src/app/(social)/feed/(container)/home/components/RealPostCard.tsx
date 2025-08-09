@@ -19,15 +19,11 @@ import {
   BsBookmark,
   BsBookmarkCheck,
   BsChatFill,
-  BsEnvelope,
   BsFlag,
   BsHeart,
   BsHeartFill,
-  BsLink,
   BsPencilSquare,
   BsPersonX,
-  BsReplyFill,
-  BsSendFill,
   BsShare,
   BsSlashCircle,
   BsThreeDots,
@@ -235,7 +231,6 @@ const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
           
           {post.imageUrls && post.imageUrls.length > 0 && (
             <div className="mb-3">
-              {console.log('Rendering images for post:', post.id, 'URLs:', post.imageUrls)}
               {post.imageUrls.length === 1 ? (
                 <img 
                   src={post.imageUrls[0]} 

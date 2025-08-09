@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Alert, Button } from 'react-bootstrap'
 import { PostService, type PostData } from '@/services/PostService'
 import RealPostCard from './RealPostCard'
-import LoadMoreButton from './LoadMoreButton'
 import { BsArrowClockwise } from 'react-icons/bs'
 
 const RealFeeds = () => {

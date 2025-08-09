@@ -68,7 +68,6 @@ const PhotoUploadCard = () => {
     setUploadError(null)
 
     try {
-      const user = await getCurrentUser()
       const uploadPromises = Array.from(files).map(async (file) => {
         // Generate unique filename
         const timestamp = Date.now()
@@ -83,7 +82,7 @@ const PhotoUploadCard = () => {
         
         return {
           id: uploadResult.key,
-          url: imageUrl,
+          url: imageUrl || '', // Ensure url is never null
           filename: file.name,
           uploadedAt: new Date()
         }

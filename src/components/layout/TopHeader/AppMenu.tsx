@@ -83,7 +83,7 @@ const AppMenu = () => {
   const { pathname } = useLocation()
 
   const activeMenu = useCallback(() => {
-    const trimmedURL = pathname?.replaceAll('', '')
+    const trimmedURL = pathname?.replace(/\//g, '') || ''
     const matchingMenuItem = getMenuItemFromURL(menuItems, trimmedURL)
 
     if (matchingMenuItem) {

@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from "react"
-import { getCurrentUser } from 'aws-amplify/auth'
 
 const TopHeader = lazy(() => import("@/components/layout/TopHeader"))
 import GlightBox from '@/components/GlightBox'
@@ -284,8 +283,8 @@ const ProfileLayout = ({ children }: ChildrenType) => {
                         variant="danger-soft" 
                         className="me-2" 
                         type="button"
-                        as={Link}
-                        to="/profile/edit"
+                        as="a"
+                        href="/profile/edit"
                       >
                         
                         <BsPencilFill size={19} className="pe-1" /> Edit profile
