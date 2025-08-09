@@ -12,10 +12,32 @@ const RealFeeds = () => {
   const [nextToken, setNextToken] = useState<string | undefined>()
   const [loadingMore, setLoadingMore] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [autoRefreshing, setAutoRefreshing] = useState(false)
 
   // Load initial posts
   useEffect(() => {
     loadPosts()
+  }, [])
+
+  // Listen for post creation events to auto-refresh the feed
+  useEffect(() => {
+    const handlePostCreated = () => {
+      console.log('Post created event received, refreshing feed...')
+      setAutoRefreshing(true)
+      // Add a small delay to ensure the backend has processed the new post
+      setTimeout(async () => {
+        await handleRefresh()
+        setAutoRefreshing(false)
+      }, 1000) // 1 second delay
+    }
+
+    // Add event listener
+    window.addEventListener('postCreated', handlePostCreated)
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('postCreated', handlePostCreated)
+    }
   }, [])
 
   const loadPosts = async (loadMore: boolean = false) => {
@@ -127,6 +149,16 @@ const RealFeeds = () => {
           }
         `}
       </style>
+      
+      {/* Auto-refresh notification */}
+      {autoRefreshing && (
+        <Alert variant="info" className="mb-3 py-2">
+          <div className="d-flex align-items-center">
+            <BsArrowClockwise className="spin me-2" />
+            <small>Updating feed with your new post...</small>
+          </div>
+        </Alert>
+      )}
       
       {/* Refresh button */}
       <div className="mb-3 d-flex justify-content-end">

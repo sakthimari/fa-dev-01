@@ -36,9 +36,8 @@ import {
 } from 'react-icons/bs'
 import { PostData } from '@/services/PostService'
 import { getCurrentUser } from 'aws-amplify/auth'
-import { useEffect } from 'react'
-
-import avatar7 from '@/assets/images/avatar/07.jpg'
+import { useEffect, useState as useStateReact } from 'react'
+import { useProfile } from '@/hooks/useProfile'
 
 interface RealPostCardProps {
   post: PostData
@@ -48,6 +47,51 @@ interface RealPostCardProps {
 
 const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
   const [liked, setLiked] = useState(false)
+  const [currentUserId, setCurrentUserId] = useStateReact<string | null>(null)
+  const { profile } = useProfile()
+  
+  // Get current user ID
+  useEffect(() => {
+    const getCurrentUserId = async () => {
+      try {
+        const user = await getCurrentUser()
+        setCurrentUserId(user.userId)
+      } catch (error) {
+        console.error('Error getting current user:', error)
+      }
+    }
+    getCurrentUserId()
+  }, [])
+  
+  // Debug logging for profile photos
+  useEffect(() => {
+    console.log('Post data for', post.authorName, ':', {
+      authorId: post.authorId,
+      authorProfilePhoto: post.authorProfilePhoto,
+      hasPhoto: !!post.authorProfilePhoto,
+      photoLength: post.authorProfilePhoto?.length || 0,
+      isCurrentUser: currentUserId === post.authorId,
+      currentUserPhoto: profile?.profilePhotoUrl
+    })
+  }, [post, currentUserId, profile])
+  
+  // Determine which profile photo to use
+  const getProfilePhotoUrl = () => {
+    // If this is the current user's post, use their fresh profile photo
+    if (currentUserId === post.authorId && profile?.profilePhotoUrl) {
+      console.log('Using current user profile photo:', profile.profilePhotoUrl)
+      return profile.profilePhotoUrl
+    }
+    
+    // Otherwise use the post's stored author photo
+    if (post.authorProfilePhoto) {
+      console.log('Using post author photo:', post.authorProfilePhoto)
+      return post.authorProfilePhoto
+    }
+    
+    // Fallback to generated avatar
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=0d6efd&color=fff&size=40`
+  }
   const [saved, setSaved] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isOwnPost, setIsOwnPost] = useState(false)
@@ -110,17 +154,19 @@ const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
               <div className="avatar avatar-story me-2">
                 <img 
                   className="avatar-img rounded-circle" 
-                  src={post.authorProfilePhoto || avatar7} 
+                  src={getProfilePhotoUrl()} 
                   alt={post.authorName} 
                   onError={(e) => {
-                    // Fallback to default avatar if image fails to load
+                    // Fallback to generated avatar if image fails to load
                     const target = e.target as HTMLImageElement
-                    if (target.src !== avatar7) {
-                      target.src = avatar7
+                    const generatedAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=6c757d&color=fff&size=40`
+                    if (target.src !== generatedAvatar) {
+                      console.log('Image failed to load, using generated avatar for:', post.authorName)
+                      target.src = generatedAvatar
                     }
                   }}
                   onLoad={() => {
-                    console.log('Profile photo loaded:', post.authorProfilePhoto)
+                    console.log('Profile photo loaded successfully for', post.authorName)
                   }}
                 />
               </div>
