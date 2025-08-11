@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Button, Row, Col, Alert } from 'react-bootstrap'
 import { BsCamera, BsX, BsImage, BsArrowClockwise } from 'react-icons/bs'
 import { ImageUploadService } from '@/services/ImageUploadService'
-import { getCurrentUser } from 'aws-amplify/auth'
 import { getImageUrl } from '@/utils/imageUtils'
 
 interface UploadedPhoto {
