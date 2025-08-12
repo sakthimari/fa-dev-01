@@ -128,6 +128,56 @@ export class ProfileService {
       throw error;
     }
   }
+
+  // Get profile by user ID (for other users)
+  static async getProfileByUserId(userId: string) {
+    try {
+      console.log('Getting profile for user ID:', userId);
+      
+      const response = await client.models.UserProfile.list({
+        filter: {
+          owner: {
+            eq: userId
+          }
+        }
+      });
+
+      if (response.data && response.data.length > 0) {
+        const profile = response.data[0];
+        
+        // Generate fresh URLs for profile and cover photos
+        let profilePhotoUrl = profile.profilePhotoUrl;
+        let coverPhotoUrl = profile.coverPhotoUrl;
+
+        if (profile.profilePhotoKey) {
+          try {
+            profilePhotoUrl = await getImageUrl(profile.profilePhotoKey);
+          } catch (error) {
+            console.warn('Could not generate fresh profile photo URL:', error);
+          }
+        }
+
+        if (profile.coverPhotoKey) {
+          try {
+            coverPhotoUrl = await getImageUrl(profile.coverPhotoKey);
+          } catch (error) {
+            console.warn('Could not generate fresh cover photo URL:', error);
+          }
+        }
+
+        return {
+          ...profile,
+          profilePhotoUrl,
+          coverPhotoUrl,
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting profile by user ID:', error);
+      return null;
+    }
+  }
 }
 
 export default ProfileService;

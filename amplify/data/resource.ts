@@ -49,6 +49,19 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.owner(), allow.authenticated().to(["read"])])
     .secondaryIndexes((index) => [index("authorId")]),
+
+  Comment: a
+    .model({
+      content: a.string().required(),
+      postId: a.id().required(),
+      authorId: a.string().required(),
+      authorName: a.string().required(),
+      authorProfilePhoto: a.string(),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.owner(), allow.authenticated().to(["read"])])
+    .secondaryIndexes((index) => [index("postId"), index("authorId")]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

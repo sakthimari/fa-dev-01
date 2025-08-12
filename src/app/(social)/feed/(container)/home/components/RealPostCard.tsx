@@ -34,6 +34,7 @@ import { PostData } from '@/services/PostService'
 import { getCurrentUser } from 'aws-amplify/auth'
 import { useEffect, useState as useStateReact } from 'react'
 import { useProfile } from '@/hooks/useProfile'
+import CommentSection from './CommentSection'
 
 interface RealPostCardProps {
   post: PostData
@@ -91,6 +92,7 @@ const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
   const [saved, setSaved] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isOwnPost, setIsOwnPost] = useState(false)
+  const [commentCount, setCommentCount] = useState(post.comments || 0)
 
   // Debug: Log post data
   useEffect(() => {
@@ -278,7 +280,7 @@ const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
             <li className="nav-item">
               <a className="nav-link mb-0 cursor-pointer">
                 <BsChatFill className="pe-1" />
-                Comments ({post.comments})
+                Comments ({commentCount})
               </a>
             </li>
             <li className="nav-item dropdown ms-sm-auto">
@@ -295,6 +297,15 @@ const RealPostCard = ({ post, onDelete, onLike }: RealPostCardProps) => {
             </li>
           </ul>
         </CardFooter>
+
+        {/* Comments Section */}
+        <div className="px-3 pb-3">
+          <CommentSection 
+            postId={post.id}
+            initialCommentCount={commentCount}
+            onCommentCountChange={setCommentCount}
+          />
+        </div>
       </Card>
 
       {/* Delete confirmation modal */}
