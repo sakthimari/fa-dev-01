@@ -6,15 +6,20 @@ import LoadMoreButton from './components/LoadMoreButton'
 import { Link } from 'react-router-dom'
 import PageMetaData from '@/components/PageMetaData'
 import { useFetchData } from '@/hooks/useFetchData'
+import InviteFriendsEmail from './components/InviteFriendsEmail'
 
 const Connections =  () => {
   const allConnections = useFetchData(getAllUserConnections)
   return (
     <>
     <PageMetaData title='Connections'/>
+    
     <Card>
       <CardHeader className="border-0 pb-0">
-        <CardTitle> Connections</CardTitle>
+        <div className="d-flex justify-content-between align-items-center">
+          <CardTitle className="mb-0">Connections</CardTitle>
+          <InviteFriendsEmail />
+        </div>
       </CardHeader>
       <CardBody>
         {allConnections?.map((connection, idx) => (
