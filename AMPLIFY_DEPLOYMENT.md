@@ -40,3 +40,5 @@ Your app will be able to:
 
 ## Note:
 Make sure you're authenticated with AWS CLI and have proper permissions to deploy Amplify resources.
+
+# v123
