@@ -1,6 +1,6 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { SES, SendEmailCommand } from '@aws-sdk/client-ses';
 
-const sesClient = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const sesClient = new SES({ region: process.env.AWS_REGION || 'us-east-1' });
 
 interface InvitationArgs {
   recipientEmail: string;
