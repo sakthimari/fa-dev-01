@@ -1,8 +1,12 @@
 {
   "name": "send-invitation",
   "version": "1.0.0",
+  "main": "index.js",
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.864.0",
-    "@types/aws-lambda": "^8.10.152"
+    "@aws-sdk/client-ses": "^3.864.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "typescript": "^5.0.0"
   }
 }
