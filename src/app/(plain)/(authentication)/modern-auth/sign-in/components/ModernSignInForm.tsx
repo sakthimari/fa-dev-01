@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Form, Alert } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -18,7 +18,6 @@ const ModernSignInForm = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
   const { refreshAuth } = useAuth()
 
   const schema = yup.object({
@@ -54,7 +53,7 @@ const ModernSignInForm = () => {
         // Handle multi-step sign-in (e.g., MFA, password reset)
         if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
           setError('Please reset your password to continue.')
-        } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE') {
+        } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE') {
           setError('MFA verification required. Please check your phone.')
         } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
           setError('Please enter your authenticator code.')

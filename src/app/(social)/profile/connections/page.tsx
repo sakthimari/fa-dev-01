@@ -10,14 +10,6 @@ import { useFetchData } from '@/hooks/useFetchData'
 import InviteFriendsEmail from './components/InviteFriendsEmail'
 import { EmailInvitationService, type PendingInvitation } from '@/services/EmailInvitationService'
 
-// Import avatar images
-import avatar01 from '@/assets/images/avatar/01.jpg'
-import avatar02 from '@/assets/images/avatar/02.jpg'
-import avatar03 from '@/assets/images/avatar/03.jpg'
-
-// Default avatar for email invitations
-const defaultAvatar = avatar01;
-
 const Connections =  () => {
   const allConnections = useFetchData(getAllUserConnections)
   const [sentRequests, setSentRequests] = useState<PendingInvitation[]>([])

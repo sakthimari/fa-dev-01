@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button, Form, Modal, Alert } from 'react-bootstrap';
 import { BsPersonPlus, BsEnvelope } from 'react-icons/bs';
 import { EmailInvitationService } from '../../../../../services/EmailInvitationService';
-import { useProfile } from '../../../../../hooks/useProfile';
 
 const InviteFriendsEmail = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -13,8 +12,6 @@ const InviteFriendsEmail = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
-  
-  const { profile } = useProfile();
 
   const handleSendInvitation = async () => {
     if (!email.trim()) {
@@ -34,7 +31,6 @@ const InviteFriendsEmail = () => {
     
     try {
       // Create personalized invitation message
-      const senderName = profile ? `${profile.firstName} ${profile.lastName}`.trim() || 'Your friend' : 'Your friend';
       const personalMessage = message || `Hi${name ? ` ${name}` : ''}! I'd like to invite you to join our social network. Connect with me and discover new content!`;
       
       const result = await EmailInvitationService.sendInvitation({

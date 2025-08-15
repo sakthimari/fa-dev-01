@@ -79,11 +79,13 @@ const ModernSignUpForm = () => {
       const { isSignUpComplete, userId, nextStep } = await signUp({
         username: data.email,
         password: data.password,
-        attributes: {
-          email: data.email,
-          name: `${data.firstName} ${data.lastName}`,
-          given_name: data.firstName,
-          family_name: data.lastName,
+        options: {
+          userAttributes: {
+            email: data.email,
+            name: `${data.firstName} ${data.lastName}`,
+            given_name: data.firstName,
+            family_name: data.lastName,
+          },
         },
       })
 

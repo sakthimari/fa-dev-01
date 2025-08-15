@@ -165,7 +165,7 @@ export class EmailInvitationService {
   /**
    * Get delivery status (mock implementation)
    */
-  static async getDeliveryStatus(messageId: string): Promise<{
+  static async getDeliveryStatus(_messageId: string): Promise<{
     status: 'pending' | 'delivered' | 'failed';
     timestamp: Date;
   }> {
