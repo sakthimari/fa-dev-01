@@ -58,6 +58,11 @@ const SignInAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-adv
 const SignUpAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-advance/sign-up/page'))
 const ForgotPassAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-advance/forgot-pass/page'))
 
+//modern auth routes
+const ModernSignIn = lazy(() => import('@/app/(plain)/(authentication)/modern-auth/sign-in/page'))
+const ModernSignUp = lazy(() => import('@/app/(plain)/(authentication)/modern-auth/sign-up/page'))
+const ModernForgotPassword = lazy(() => import('@/app/(plain)/(authentication)/modern-auth/forgot-password/page'))
+
 const NotFoundPage = lazy(() => import('@/app/(social)/(with-topbar)/not-found/page'))
 const OfflinePage = lazy(() => import('@/app/(plain)/offline/page'))
 const PrivacyAndTermPage = lazy(() => import('@/app/(social)/(with-topbar)/privacy-terms/page'))
@@ -347,6 +352,21 @@ export const authRoutes: RoutesProps[] = [
     path: '/auth-advance/forgot-pass',
     name: 'Sign Up Advance',
     element: <ForgotPassAdvance />,
+  },
+  {
+    path: '/modern-auth/sign-in',
+    name: 'Modern Sign In',
+    element: <ModernSignIn />,
+  },
+  {
+    path: '/modern-auth/sign-up',
+    name: 'Modern Sign Up',
+    element: <ModernSignUp />,
+  },
+  {
+    path: '/modern-auth/forgot-password',
+    name: 'Modern Forgot Password',
+    element: <ModernForgotPassword />,
   },
 ]
 

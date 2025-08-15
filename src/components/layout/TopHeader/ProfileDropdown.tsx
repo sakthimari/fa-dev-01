@@ -16,7 +16,7 @@ import { toSentenceCase } from '@/utils/change-casing'
 import clsx from 'clsx'
 import { Link } from 'react-router-dom'
 
-import { signOut } from 'aws-amplify/auth';
+import { useAuth } from '@/context/AuthProvider';
 
 type ThemeModeType = {
   theme: ThemeType
@@ -26,6 +26,7 @@ type ThemeModeType = {
 const ProfileDropdown = () => {
   const { profile, refreshProfile } = useProfile()
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null)
+  const { signOut, loading } = useAuth()
 
   // Refresh profile data when component mounts
   useEffect(() => {
@@ -44,14 +45,11 @@ const ProfileDropdown = () => {
     loadProfileImage()
   }, [profile?.profilePhotoKey])
 
-  async function handleSignOut() {
+  const handleSignOut = async () => {
     try {
-        console.log('signing out...');
-        await signOut({ global: true });
-        // Don't call removeSession here as Amplify handles the redirect
-        // removeSession is for cookie-based auth, not needed with Amplify
+      await signOut()
     } catch (error) {
-        console.log('error signing out: ', error);
+      console.error('Error signing out:', error)
     }
   }
   const themeModes: ThemeModeType[] = [
@@ -126,9 +124,9 @@ const ProfileDropdown = () => {
         </li>
         <DropdownDivider />
         <li>
-          <DropdownItem  className="bg-danger-soft-hover" onClick={handleSignOut}>
+          <DropdownItem className="bg-danger-soft-hover" onClick={handleSignOut} disabled={loading}>
             <BsPower className="fa-fw me-2" />
-            Sign Out
+            {loading ? 'Signing Out...' : 'Sign Out'}
           </DropdownItem>
         </li>
         <li>

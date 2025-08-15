@@ -1,0 +1,219 @@
+/* Modern Auth Styles */
+.modern-auth-container {
+  font-family: 'Inter', sans-serif;
+}
+
+.modern-auth-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modern-auth-input {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.modern-auth-input:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.modern-auth-button {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.modern-auth-button:active {
+  transform: translateY(0);
+}
+
+.modern-auth-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.modern-auth-button:hover::before {
+  left: 100%;
+}
+
+.social-auth-button {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  padding: 8px 12px;
+  border: 2px solid #e9ecef;
+  background: white;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.floating-element {
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-element-2 {
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+.floating-element-3 {
+  animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.modern-checkbox {
+  accent-color: #667eea;
+}
+
+.password-strength-indicator {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.form-floating-modern .form-control {
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  padding: 1rem 1rem 1rem 3rem;
+  height: auto;
+  font-size: 16px;
+}
+
+.form-floating-modern .form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.modern-divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.modern-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e9ecef;
+}
+
+.modern-divider span {
+  background: white;
+  padding: 0 1rem;
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+/* Dark mode support */
+[data-bs-theme="dark"] .modern-auth-card {
+  background: rgba(33, 37, 41, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .form-floating-modern .form-control {
+  background-color: #2b3035;
+  border-color: #495057;
+  color: #fff;
+}
+
+[data-bs-theme="dark"] .modern-divider::before {
+  background: #495057;
+}
+
+[data-bs-theme="dark"] .modern-divider span {
+  background: #212529;
+  color: #adb5bd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modern-auth-container {
+    padding: 1rem;
+  }
+  
+  .modern-auth-card {
+    margin: 1rem 0;
+  }
+}
+
+/* Animation for success states */
+.success-animation {
+  animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Loading spinner enhancement */
+.modern-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

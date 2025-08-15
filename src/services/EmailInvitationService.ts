@@ -15,7 +15,68 @@ export interface SendInvitationResponse {
   error?: string;
 }
 
+export interface PendingInvitation {
+  id: string;
+  recipientEmail: string;
+  recipientName?: string;
+  inviteMessage?: string;
+  sentAt: string;
+  status: 'pending' | 'registered' | 'declined';
+  messageId?: string;
+}
+
+// Local storage key for pending invitations
+const PENDING_INVITATIONS_KEY = 'pendingEmailInvitations';
+
 export class EmailInvitationService {
+  /**
+   * Get pending email invitations from localStorage
+   */
+  static getPendingInvitations(): PendingInvitation[] {
+    try {
+      const stored = localStorage.getItem(PENDING_INVITATIONS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error reading pending invitations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save pending invitations to localStorage
+   */
+  static savePendingInvitations(invitations: PendingInvitation[]): void {
+    try {
+      localStorage.setItem(PENDING_INVITATIONS_KEY, JSON.stringify(invitations));
+    } catch (error) {
+      console.error('Error saving pending invitations:', error);
+    }
+  }
+
+  /**
+   * Add a new pending invitation
+   */
+  static addPendingInvitation(invitation: Omit<PendingInvitation, 'id' | 'sentAt' | 'status'>): void {
+    const invitations = this.getPendingInvitations();
+    const newInvitation: PendingInvitation = {
+      ...invitation,
+      id: Date.now().toString(),
+      sentAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    invitations.push(newInvitation);
+    this.savePendingInvitations(invitations);
+  }
+
+  /**
+   * Remove a pending invitation
+   */
+  static removePendingInvitation(invitationId: string): void {
+    const invitations = this.getPendingInvitations();
+    const filtered = invitations.filter(inv => inv.id !== invitationId);
+    this.savePendingInvitations(filtered);
+  }
+
   /**
    * Send an email invitation using AWS SES via Lambda function
    */
@@ -54,8 +115,23 @@ export class EmailInvitationService {
 
       // Parse the JSON response from Lambda
       const response = JSON.parse(result.data);
+      console.log('Lambda response:', response);
       
       if (response.success) {
+        // Extract a better display name from email
+        const emailPrefix = recipientEmail.split('@')[0]
+        const displayName = emailPrefix
+          .replace(/[._-]/g, ' ')
+          .replace(/\b\w/g, l => l.toUpperCase())
+
+        // Add to pending invitations list
+        this.addPendingInvitation({
+          recipientEmail,
+          recipientName: displayName,
+          inviteMessage,
+          messageId: response.messageId
+        });
+
         return {
           success: true,
           message: response.message || 'Invitation sent successfully',
