@@ -1,5 +1,4 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import type { AppSyncResolverEvent } from 'aws-lambda';
 
 const sesClient = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
 
@@ -8,7 +7,17 @@ interface InvitationArgs {
   inviteMessage?: string;
 }
 
-export const handler = async (event: AppSyncResolverEvent<InvitationArgs>): Promise<string> => {
+interface AppSyncIdentity {
+  claims?: any;
+  username?: string;
+}
+
+interface AppSyncEvent {
+  arguments: InvitationArgs;
+  identity?: AppSyncIdentity;
+}
+
+export const handler = async (event: AppSyncEvent): Promise<string> => {
   try {
     const { recipientEmail, inviteMessage } = event.arguments;
     
