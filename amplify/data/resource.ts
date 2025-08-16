@@ -64,7 +64,16 @@ const schema = a.schema({
     .authorization((allow) => [allow.owner(), allow.authenticated().to(["read"])])
     .secondaryIndexes((index) => [index("postId"), index("authorId")]),
 
-  // ...existing code...
+  // Custom query for sending invitations
+  sendInvitation: a
+    .query()
+    .arguments({
+      recipientEmail: a.string().required(),
+      inviteMessage: a.string(),
+    })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(require('../backend/functions/send-invitation/resource').sendInvitation)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

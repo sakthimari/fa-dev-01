@@ -139,4 +139,4 @@ Connect with friends, share moments, and discover new content!
       errorCode: error?.code || 'UNKNOWN'
     });
   }
-};
+}

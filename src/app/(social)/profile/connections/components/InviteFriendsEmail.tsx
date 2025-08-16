@@ -26,11 +26,38 @@ const InviteFriendsEmail = () => {
       return;
     }
 
-  // Since sendInvitation is removed, just show a message or disable the feature
-  setAlertMessage('Email invitation feature is currently unavailable.');
-  setAlertType('error');
-  setShowAlert(true);
-  setIsInviting(false);
+    setIsInviting(true);
+    setShowAlert(false);
+    try {
+      // Create personalized invitation message
+      const personalMessage = message || `Hi${name ? ` ${name}` : ''}! I'd like to invite you to join our social network. Connect with me and discover new content!`;
+      const result = await EmailInvitationService.sendInvitation({
+        recipientEmail: email,
+        inviteMessage: personalMessage
+      });
+      if (result.success) {
+        setAlertMessage(`Invitation sent successfully to ${email}!`);
+        setAlertType('success');
+        setShowAlert(true);
+        setTimeout(() => {
+          setEmail('');
+          setName('');
+          setMessage('');
+          setShowInviteModal(false);
+          setShowAlert(false);
+        }, 2000);
+      } else {
+        setAlertMessage(result.error || 'Failed to send invitation. Please try again.');
+        setAlertType('error');
+        setShowAlert(true);
+      }
+    } catch (error) {
+      setAlertMessage('An unexpected error occurred. Please try again.');
+      setAlertType('error');
+      setShowAlert(true);
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   return (
