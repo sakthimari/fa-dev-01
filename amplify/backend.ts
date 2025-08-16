@@ -3,20 +3,14 @@ import { PolicyStatement, Effect } from 'aws-cdk-lib/aws-iam';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
-import { sendInvitation } from './backend/functions/send-invitation/resource';
+// Removed sendInvitation import
 
 export const backend = defineBackend({
   auth,
   data,
   storage,
-  sendInvitation,
+  // Removed sendInvitation from backend definition
 });
 
 // Grant SES permissions to the sendInvitation function
-backend.sendInvitation.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    effect: Effect.ALLOW,
-    actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-    resources: ['*'],
-  })
-);
+// Removed SES permissions for sendInvitation function
