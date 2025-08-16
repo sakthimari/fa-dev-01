@@ -1,7 +1,6 @@
-import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../amplify/data/resource';
+// ...existing code...
 
-const client = generateClient<Schema>();
+// ...existing code...
 
 export interface SendInvitationRequest {
   recipientEmail: string;

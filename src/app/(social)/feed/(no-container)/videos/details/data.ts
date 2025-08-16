@@ -10,7 +10,7 @@ import { addOrSubtractMinutesFromDate } from '@/utils/date'
 type CommentType = {
   name: string
   avatar: string
-  comment: String
+  comment: string
   likeCount?: number
   repliesCount?: number
   reply?: CommentType[]
