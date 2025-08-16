@@ -2,6 +2,7 @@
   "name": "send-invitation",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.864.0"
   },
