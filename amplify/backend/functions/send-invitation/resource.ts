@@ -6,9 +6,6 @@ export const sendInvitation = defineFunction({
   runtime: 20,
   environment: {
     SES_FROM_EMAIL: 'sakthimari@gmail.com',
-  APP_URL: process.env.APP_URL || 'http://localhost:5173'
-  }
+    APP_URL: process.env.APP_URL || 'http://localhost:5173',
+  },
 });
-
-
- // check this code to work
