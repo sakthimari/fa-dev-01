@@ -1,5 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-import { sendInvitation } from "../functions/send-invitation/resource";
+import { sendInvitation } from "../backend/functions/send-invitation/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
