@@ -9,3 +9,6 @@ export const sendInvitation = defineFunction({
   APP_URL: process.env.APP_URL || 'http://localhost:5173'
   }
 });
+
+
+ // check this code to work
