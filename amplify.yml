@@ -18,3 +18,7 @@ frontend:
     paths:
       - .npm/**/*
       - node_modules/**/*
+  environment:
+    variables:
+      APP_URL: 'https://main.d14dyhki3v6xyw.amplifyapp.com/modern-auth/sign-in'
+  
