@@ -1,5 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-import { sendInvitation } from '../backend/functions/send-invitation/resource';
+//import { sendInvitation } from '../backend/functions/send-invitation/resource';
 // ...existing code...
 
 /*== STEP 1 ===============================================================
@@ -74,7 +74,7 @@ const schema = a.schema({
     })
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
-    .handler(a.handler.function(sendInvitation)),
+   // .handler(a.handler.function(sendInvitation)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
