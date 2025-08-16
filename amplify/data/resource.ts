@@ -73,7 +73,7 @@ const schema = a.schema({
     })
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
-    .handler(a.handler.function(require('../backend/functions/send-invitation/resource').sendInvitation)),
+    .handler(a.handler.function((await import('../backend/functions/send-invitation/resource')).sendInvitation)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
