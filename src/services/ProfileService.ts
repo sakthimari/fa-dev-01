@@ -1,6 +1,7 @@
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { getImageUrl } from "@/utils/imageUtils";
+import { getCurrentUser } from 'aws-amplify/auth';
 
 const client = generateClient<Schema>();
 
@@ -61,26 +62,51 @@ export class ProfileService {
   // Get user profile (returns the first profile for the authenticated user)
   static async getProfile() {
     try {
-      console.log('Fetching user profile...');
+      // Check for valid authentication token
+      let currentUser;
+      try {
+        currentUser = await getCurrentUser();
+        console.log('Current authenticated user:', currentUser);
+      } catch (authError) {
+        console.error('User not authenticated:', authError);
+        return null; // Return null instead of throwing error
+      }
+      
+      console.log('Fetching user profile for user:', currentUser.username);
+      
       const { data: profiles } = await client.models.UserProfile.list({
-        limit: 1, // We expect only one profile per user
+        authMode: 'userPool', // Ensure it uses user authentication
+        limit: 10, // Increase limit to see all profiles for debugging
       });
       
+      console.log('All profiles found:', profiles);
+      console.log('Number of profiles found:', profiles.length);
+      
       if (profiles.length === 0) {
-        console.log('No profile found');
+        console.log('No profile found for current user');
         return null;
       }
       
-      const profile = profiles[0];
-      console.log('Raw profile from DB:', profile);
+      // Find profile that belongs to current user
+      const userProfile = profiles.find(profile => {
+        console.log('Checking profile owner:', profile.owner, 'vs current user:', currentUser.username);
+        return profile.owner === currentUser.username;
+      });
+      
+      if (!userProfile) {
+        console.log('No profile found matching current user');
+        return null;
+      }
+      
+      console.log('Found matching profile:', userProfile);
       
       // Generate fresh URLs for images if keys exist
-      let profilePhotoUrl = profile.profilePhotoUrl || '';
-      let coverPhotoUrl = profile.coverPhotoUrl || '';
+      let profilePhotoUrl = userProfile.profilePhotoUrl || '';
+      let coverPhotoUrl = userProfile.coverPhotoUrl || '';
       
-      if (profile.profilePhotoKey) {
+      if (userProfile.profilePhotoKey) {
         try {
-          const freshProfileUrl = await getImageUrl(profile.profilePhotoKey);
+          const freshProfileUrl = await getImageUrl(userProfile.profilePhotoKey);
           if (freshProfileUrl) {
             profilePhotoUrl = freshProfileUrl;
             console.log('Generated fresh profile photo URL:', profilePhotoUrl);
@@ -90,9 +116,9 @@ export class ProfileService {
         }
       }
       
-      if (profile.coverPhotoKey) {
+      if (userProfile.coverPhotoKey) {
         try {
-          const freshCoverUrl = await getImageUrl(profile.coverPhotoKey);
+          const freshCoverUrl = await getImageUrl(userProfile.coverPhotoKey);
           if (freshCoverUrl) {
             coverPhotoUrl = freshCoverUrl;
             console.log('Generated fresh cover photo URL:', coverPhotoUrl);
@@ -103,7 +129,7 @@ export class ProfileService {
       }
       
       const enrichedProfile = {
-        ...profile,
+        ...userProfile,
         profilePhotoUrl,
         coverPhotoUrl
       };

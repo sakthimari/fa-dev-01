@@ -175,6 +175,8 @@ export type NotificationType = {
   time: Date
   isFriendRequest?: boolean
   isRead?: boolean
+  inviterId?: string // ID of the user who sent the friend request
+  inviterName?: string // Name of the user who sent the friend request
 }
 
 export type PostType = {

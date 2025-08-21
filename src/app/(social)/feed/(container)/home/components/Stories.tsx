@@ -1,6 +1,7 @@
 
 import { Button, Card } from 'react-bootstrap'
-import { FaPlus } from 'react-icons/fa6'
+import { FaPlus, FaChevronLeft, FaChevronRight } from 'react-icons/fa6'
+import { useRef, useState } from 'react'
 
 import post2 from '@/assets/images/post/1by1/02.jpg'
 import albums1 from '@/assets/images/albums/01.jpg'
@@ -15,7 +16,6 @@ import post4 from '@/assets/images/post/1by1/04.jpg'
 import post5 from '@/assets/images/post/1by1/05.jpg'
 import post6 from '@/assets/images/post/1by1/06.jpg'
 import post7 from '@/assets/images/post/1by1/07.jpg'
-import StoryComponent from './StoryComponent'
 
 const timestamp = () => {
   const timeIndex = 1678166046264 / 1000
@@ -74,6 +74,23 @@ const stories: Story[] = [
         length: 5,
         src: albums2,
         preview: albums2,
+        link: '',
+        linkText: false,
+        time: timestamp(),
+      },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Michael Jordan',
+    photo: post3,
+    time: timestamp(),
+    items: [
+      {
+        id: 'story-4',
+        length: 5,
+        src: albums2,
+        type: 'photo',
         link: '',
         linkText: false,
         time: timestamp(),
@@ -219,19 +236,104 @@ const stories: Story[] = [
 ]
 
 const Stories = () => {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showControls, setShowControls] = useState(false)
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -140, behavior: 'smooth' })
+    }
+  }
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 140, behavior: 'smooth' })
+    }
+  }
+
   return (
-    <div className="d-flex gap-2 mb-n3">
-      <div className="position-relative">
-        <Card className="border border-2 border-dashed h-150px px-4 px-sm-5 shadow-none d-flex align-items-center justify-content-center text-center">
-          <div>
-            <Button variant="light" className="stretched-link rounded-circle icon-md">
-              <FaPlus />
-            </Button>
-            <h6 className="mt-2 mb-0 small">Post a Story</h6>
+    <div 
+      className="position-relative"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {/* Left Arrow */}
+      {showControls && (
+        <Button
+          variant="light"
+          className="position-absolute top-50 start-0 translate-middle-y rounded-circle p-2 shadow-sm"
+          style={{ zIndex: 10, width: '32px', height: '32px' }}
+          onClick={scrollLeft}
+        >
+          <FaChevronLeft size={12} />
+        </Button>
+      )}
+
+      {/* Right Arrow */}
+      {showControls && (
+        <Button
+          variant="light"
+          className="position-absolute top-50 end-0 translate-middle-y rounded-circle p-2 shadow-sm"
+          style={{ zIndex: 10, width: '32px', height: '32px' }}
+          onClick={scrollRight}
+        >
+          <FaChevronRight size={12} />
+        </Button>
+      )}
+
+      {/* Stories Container */}
+      <div 
+        ref={scrollRef}
+        className="d-flex gap-2 mb-n3 stories-scroll"
+        style={{
+          overflowX: 'auto',
+          scrollbarWidth: 'none', // Firefox
+          msOverflowStyle: 'none' // IE/Edge
+        }}
+      >
+        <style>{`
+          .stories-scroll::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        
+        <div className="position-relative flex-shrink-0">
+          <Card className="border border-2 border-dashed h-150px px-4 px-sm-5 shadow-none d-flex align-items-center justify-content-center text-center">
+            <div>
+              <Button variant="light" className="stretched-link rounded-circle icon-md">
+                <FaPlus />
+              </Button>
+              <h6 className="mt-2 mb-0 small">Post a Story</h6>
+            </div>
+          </Card>
+        </div>
+        
+        {/* Story cards */}
+        {stories.slice(0, 8).map((story) => (
+          <div key={story.id} className="position-relative flex-shrink-0" style={{ width: '120px' }}>
+            <Card className="h-150px shadow-none border-0 overflow-hidden rounded">
+              <div className="h-100 position-relative">
+                <img 
+                  loading="eager" 
+                  src={story.photo} 
+                  alt={story.name}
+                  className="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+                  style={{ objectFit: 'cover' }}
+                />
+                <div 
+                  className="position-absolute bottom-0 start-0 end-0 p-2 text-white"
+                  style={{
+                    background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.8))',
+                    zIndex: 2
+                  }}
+                >
+                  <small className="fw-bold">{story.name}</small>
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        ))}
       </div>
-      <StoryComponent stories={stories} />
     </div>
   )
 }

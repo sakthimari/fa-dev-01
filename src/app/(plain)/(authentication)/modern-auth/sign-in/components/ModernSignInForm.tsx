@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button, Form, Alert } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { signIn } from 'aws-amplify/auth'
+import { signIn, getCurrentUser } from 'aws-amplify/auth'
+import { Auth } from 'aws-amplify';
 import { useAuth } from '@/context/AuthProvider'
+import { ConnectionService } from '@/services/ConnectionService'
+import { EmailInvitationService } from '@/services/EmailInvitationService'
 
 interface SignInFormData {
   email: string
@@ -19,6 +22,32 @@ const ModernSignInForm = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const { refreshAuth } = useAuth()
+  const [searchParams] = useSearchParams()
+
+  // Extract invitation token from URL parameters
+  const invitationToken = searchParams.get('token')
+  const [invitationData, setInvitationData] = useState<{inviterName: string; recipientName: string; recipientEmail: string; inviterAvatar?: string} | null>(null)
+
+  useEffect(() => {
+    // If user came from an invitation email, get invitation data from token
+    if (invitationToken) {
+      console.log('User signing in with invitation token:', invitationToken)
+      const data = EmailInvitationService.getInvitationFromToken(invitationToken)
+      
+      if (data) {
+        setInvitationData(data)
+        console.log('Retrieved invitation data for sign-in:', data)
+        localStorage.setItem('pendingInvitationContext', JSON.stringify({
+          inviterName: data.inviterName,
+          recipientName: data.recipientName,
+          inviterAvatar: data.inviterAvatar,
+          timestamp: Date.now()
+        }))
+      } else {
+        console.warn('Invalid or expired invitation token:', invitationToken)
+      }
+    }
+  }, [invitationToken])
 
   const schema = yup.object({
     email: yup.string().email('Please enter a valid email').required('Email is required'),
@@ -38,33 +67,51 @@ const ModernSignInForm = () => {
   const onSubmit = async (data: SignInFormData) => {
     setLoading(true)
     setError('')
-    
     try {
-      const { isSignedIn, nextStep } = await signIn({
+      const { isSignedIn } = await signIn({
         username: data.email,
         password: data.password,
       })
-
       if (isSignedIn) {
-        // Refresh the auth context to update the user state
-        await refreshAuth()
-        // Navigation will be handled by the AuthProvider
-      } else {
-        // Handle multi-step sign-in (e.g., MFA, password reset)
-        if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
-          setError('Please reset your password to continue.')
-        } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_SMS_CODE') {
-          setError('MFA verification required. Please check your phone.')
-        } else if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
-          setError('Please enter your authenticator code.')
-        } else {
-          setError('Additional verification required. Please check your email or phone.')
+        // Check if user came from an invitation link
+        const pendingInvitationContext = localStorage.getItem('pendingInvitationContext')
+        if (pendingInvitationContext) {
+          try {
+            const context = JSON.parse(pendingInvitationContext)
+            console.log('Processing invitation context for existing user:', context)
+            
+            // Get current user to process invitation
+            const currentUser = await getCurrentUser()
+            await ConnectionService.handleRegistration(data.email, currentUser.userId)
+            
+            // IMPORTANT: Also create the notification directly for existing users
+            // This ensures they see the friend request immediately after login
+            if (context.inviterName) {
+              console.log('Creating friend request notification for existing user...')
+              const { NotificationService } = await import('@/services/NotificationService')
+              const notificationResult = await NotificationService.createFriendRequestNotification(
+                currentUser.userId,
+                context.inviterName,
+                context.inviterAvatar // Include avatar in notification
+              )
+              console.log('Friend request notification created for existing user:', notificationResult)
+            }
+            
+            // Clear the pending invitation context
+            localStorage.removeItem('pendingInvitationContext')
+            localStorage.setItem('justSignedInFromInvitation', 'true')
+            console.log('Processed invitation for existing user')
+          } catch (error) {
+            console.warn('Could not process invitation context:', error)
+          }
         }
+        
+        await refreshAuth()
+      } else {
+        setError('Additional verification required. Please check your email or phone.')
       }
     } catch (err: any) {
       console.error('Sign in error:', err)
-      
-      // Handle specific error types
       if (err.name === 'NotAuthorizedException') {
         setError('Incorrect email or password. Please try again.')
       } else if (err.name === 'UserNotConfirmedException') {
@@ -99,6 +146,21 @@ const ModernSignInForm = () => {
         <h1 className="h4 fw-bold text-dark mb-1">Welcome Back!</h1>
         <p className="text-muted small mb-0">Please sign in to your account</p>
       </div>
+
+      {/* Invitation Banner */}
+      {invitationData?.inviterName && (
+        <Alert variant="info" className="border-0 shadow-sm mb-3">
+          <div className="d-flex align-items-center">
+            <i className="fas fa-envelope-open text-info me-3 fs-5"></i>
+            <div>
+              <strong>🎉 You're invited by {invitationData.inviterName}!</strong>
+              <div className="small text-muted mt-1">
+                Sign in to accept {invitationData.inviterName}'s friend request.
+              </div>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       {/* Error Alert */}
       {error && (

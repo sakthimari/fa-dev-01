@@ -2,7 +2,66 @@
 // zuck.scss
 // Vendor css override and new css added
 
-// stories style
+// Essential zuck.js styles (inline to avoid import issues)
+.stories {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 0;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .story {
+    flex-shrink: 0;
+    margin-right: 15px;
+    text-align: center;
+    cursor: pointer;
+    
+    .item-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      
+      .item-preview {
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        border: 3px solid #0d6efd;
+        padding: 2px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+        }
+      }
+      
+      .info {
+        .name {
+          font-size: 12px;
+          font-weight: 500;
+          color: #333;
+          max-width: 82px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+    
+    &.seen .item-link .item-preview {
+      border-color: #ccc;
+      opacity: 0.6;
+    }
+  }
+}
+
+// Original custom stories style
 .stories .story > .item-link {
   text-decoration: none;
   color: $headings-color;

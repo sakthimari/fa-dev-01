@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Form, Modal, Alert } from 'react-bootstrap';
-import { BsPersonPlus, BsEnvelope } from 'react-icons/bs';
+import { BsPersonPlus } from 'react-icons/bs';
 import { EmailInvitationService } from '../../../../../services/EmailInvitationService';
 
 const InviteFriendsEmail = () => {
@@ -12,8 +12,9 @@ const InviteFriendsEmail = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
+  const [showEmailClientOption, setShowEmailClientOption] = useState(false);
 
-  const handleSendInvitation = async () => {
+  const handleSendInvitation = async (useEmailClient: boolean = false) => {
     if (!email.trim()) {
       return;
     }
@@ -28,15 +29,26 @@ const InviteFriendsEmail = () => {
 
     setIsInviting(true);
     setShowAlert(false);
+    setShowEmailClientOption(false);
+    
     try {
       // Create personalized invitation message
       const personalMessage = message || `Hi${name ? ` ${name}` : ''}! I'd like to invite you to join our social network. Connect with me and discover new content!`;
-      const result = await EmailInvitationService.sendInvitation({
-        recipientEmail: email,
-        inviteMessage: personalMessage
-      });
+      
+      const result = useEmailClient 
+        ? await EmailInvitationService.sendInvitationWithEmailClient({
+            recipientEmail: email,
+            recipientName: name || undefined,
+            inviteMessage: personalMessage
+          })
+        : await EmailInvitationService.sendInvitation({
+            recipientEmail: email,
+            recipientName: name || undefined,
+            inviteMessage: personalMessage
+          });
+      
       if (result.success) {
-        setAlertMessage(`Invitation sent successfully to ${email}!`);
+        setAlertMessage(result.message);
         setAlertType('success');
         setShowAlert(true);
         setTimeout(() => {
@@ -45,11 +57,20 @@ const InviteFriendsEmail = () => {
           setMessage('');
           setShowInviteModal(false);
           setShowAlert(false);
-        }, 2000);
+          setShowEmailClientOption(false);
+        }, 4000);
       } else {
-        setAlertMessage(result.error || 'Failed to send invitation. Please try again.');
-        setAlertType('error');
-        setShowAlert(true);
+        // Check if it's a permission error that can be resolved with email client
+        if (result.error?.includes('Permission Error') || result.error?.includes('not authorized')) {
+          setAlertMessage(result.error);
+          setAlertType('error');
+          setShowAlert(true);
+          setShowEmailClientOption(true);
+        } else {
+          setAlertMessage(result.error || 'Failed to send invitation. Please try again.');
+          setAlertType('error');
+          setShowAlert(true);
+        }
       }
     } catch (error) {
       setAlertMessage('An unexpected error occurred. Please try again.');
@@ -118,13 +139,21 @@ const InviteFriendsEmail = () => {
                 onChange={(e) => setMessage(e.target.value)}
               />
               <Form.Text className="text-muted">
-                This message will be included in the invitation email.
+                This message will be included in the email invitation sent to your friend.
               </Form.Text>
             </Form.Group>
+            
+            <div className="bg-info bg-opacity-10 p-3 rounded mb-3">
+              <small className="text-info">
+                <strong>How it works:</strong> An email invitation will be sent to your friend with options to accept or decline your connection request. If they accept, you'll be connected!
+              </small>
+            </div>
+            
             <div className="bg-light p-3 rounded">
-              <h6 className="mb-2">Preview:</h6>
+              <h6 className="mb-2">Email Preview:</h6>
+              <p className="mb-1 small"><strong>Subject:</strong> You've been invited to connect</p>
               <p className="mb-0 small text-muted">
-                {message || `Hi${name ? ` ${name}` : ''}! I'd like to invite you to join our social network. Connect with me and discover new content!`}
+                <strong>Message:</strong> {message || `Hi${name ? ` ${name}` : ''}! I'd like to invite you to join our social network. Connect with me and discover new content!`}
               </p>
             </div>
           </Form>
@@ -133,9 +162,22 @@ const InviteFriendsEmail = () => {
           <Button variant="secondary" onClick={() => setShowInviteModal(false)}>
             Cancel
           </Button>
+          
+          {showEmailClientOption && (
+            <Button 
+              variant="outline-primary" 
+              onClick={() => handleSendInvitation(true)}
+              disabled={isInviting || !email.trim()}
+              className="me-2"
+            >
+              <i className="fas fa-envelope me-2"></i>
+              Use Email Client
+            </Button>
+          )}
+          
           <Button 
             variant="primary" 
-            onClick={handleSendInvitation}
+            onClick={() => handleSendInvitation(false)}
             disabled={isInviting || !email.trim()}
           >
             {isInviting ? (
@@ -147,7 +189,7 @@ const InviteFriendsEmail = () => {
               </>
             ) : (
               <>
-                <BsEnvelope className="me-2" />
+                <BsPersonPlus className="me-2" />
                 Send Invitation
               </>
             )}

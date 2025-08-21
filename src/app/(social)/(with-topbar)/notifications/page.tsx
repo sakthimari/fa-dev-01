@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { getAllNotifications } from '@/helpers/data'
 import { timeSince } from '@/utils/date'
 import clsx from 'clsx'
@@ -20,9 +21,64 @@ import { BsBell, BsBellSlash, BsCheckLg, BsThreeDots, BsTrash, BsVolumeMute } fr
 import LoadMoreButton from './components/LoadMoreButton'
 import { useFetchData } from '@/hooks/useFetchData'
 import PageMetaData from '@/components/PageMetaData'
+import { useAuth } from '@/context/AuthProvider'
+import { NotificationService } from '@/services/NotificationService'
+import type { NotificationType } from '@/types/data'
 
 const Notifications =  () => {
-  const allNotifications = useFetchData(getAllNotifications)
+  const { user } = useAuth()
+  const staticNotifications = useFetchData(getAllNotifications)
+  const [userNotifications, setUserNotifications] = useState<NotificationType[]>([])
+  const [allNotifications, setAllNotifications] = useState<NotificationType[]>([])
+
+  // Load user-specific notifications
+  useEffect(() => {
+    if (user?.userId) {
+      const notifications = NotificationService.getUserNotifications(user.userId)
+      setUserNotifications(notifications)
+    }
+  }, [user?.userId])
+
+  // Combine user notifications with static demo notifications
+  useEffect(() => {
+    const combined = [...userNotifications, ...(staticNotifications || [])]
+    // Sort by time, newest first
+    combined.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+    setAllNotifications(combined)
+  }, [userNotifications, staticNotifications])
+
+  const handleAcceptFriendRequest = async (notificationId: string) => {
+    if (!user?.userId) return
+    
+    try {
+      // Mark notification as read and remove it
+      await NotificationService.deleteNotification(user.userId, notificationId)
+      
+      // Refresh notifications
+      const updatedNotifications = NotificationService.getUserNotifications(user.userId)
+      setUserNotifications(updatedNotifications)
+      
+      console.log('Friend request accepted')
+    } catch (error) {
+      console.error('Error accepting friend request:', error)
+    }
+  }
+
+  const handleDeleteFriendRequest = async (notificationId: string) => {
+    if (!user?.userId) return
+    
+    try {
+      await NotificationService.deleteNotification(user.userId, notificationId)
+      
+      // Refresh notifications
+      const updatedNotifications = NotificationService.getUserNotifications(user.userId)
+      setUserNotifications(updatedNotifications)
+      
+      console.log('Friend request deleted')
+    } catch (error) {
+      console.error('Error deleting friend request:', error)
+    }
+  }
   return (
     <>
     <PageMetaData title='Notifications'/>
@@ -70,7 +126,7 @@ const Notifications =  () => {
               <CardBody className="p-2">
                 <ul className="list-unstyled">
                   {allNotifications?.map((notification, idx) => (
-                    <li key={idx}>
+                    <li key={notification.id || idx}>
                       <div className={clsx('rounded d-sm-flex border-0 mb-1 p-3 position-relative', { 'badge-unread': !notification.isRead })}>
                         <div className="avatar text-center">
                           {notification.avatar ? (
@@ -88,10 +144,20 @@ const Notifications =  () => {
                           {notification.description && notification.description}
                           {notification.isFriendRequest && (
                             <div className="d-flex">
-                              <Button variant="primary" size="sm" className="py-1 me-2">
+                              <Button 
+                                variant="primary" 
+                                size="sm" 
+                                className="py-1 me-2"
+                                onClick={() => handleAcceptFriendRequest(notification.id)}
+                              >
                                 Accept
                               </Button>
-                              <Button variant="danger-soft" size="sm" className="py-1">
+                              <Button 
+                                variant="danger-soft" 
+                                size="sm" 
+                                className="py-1"
+                                onClick={() => handleDeleteFriendRequest(notification.id)}
+                              >
                                 Delete
                               </Button>
                             </div>

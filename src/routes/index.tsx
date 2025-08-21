@@ -58,6 +58,10 @@ const SignInAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-adv
 const SignUpAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-advance/sign-up/page'))
 const ForgotPassAdvance = lazy(() => import('@/app/(plain)/(authentication)/auth-advance/forgot-pass/page'))
 
+//invitation routes
+const AcceptInvitation = lazy(() => import('@/app/(social)/invitation/accept/page'))
+const DeclineInvitation = lazy(() => import('@/app/(social)/invitation/decline/page'))
+
 //modern auth routes
 const ModernSignIn = lazy(() => import('@/app/(plain)/(authentication)/modern-auth/sign-in/page'))
 const ModernSignUp = lazy(() => import('@/app/(plain)/(authentication)/modern-auth/sign-up/page'))
@@ -81,7 +85,11 @@ const initialRoutes: RoutesProps[] = [
     name: 'root',
     element: <Navigate to="/feed/home" />,
   },
- 
+  {
+    path: '/test',
+    name: 'test',
+    element: <div style={{padding: '20px', fontSize: '18px', color: 'blue'}}>Test Route Working! This confirms routing is functional.</div>,
+  },
 ]
 
 // feed with container
@@ -261,6 +269,16 @@ export  const socialWithTopbarRoutes: RoutesProps[] = [
     path: '/blogs/:blogId',
     name: 'Blog Details',
     element: <BlogDetails />,
+  },
+  {
+    path: '/invitation/accept',
+    name: 'Accept Invitation',
+    element: <AcceptInvitation />,
+  },
+  {
+    path: '/invitation/decline',
+    name: 'Decline Invitation',
+    element: <DeclineInvitation />,
   },
   {
     path: '/privacy-terms',

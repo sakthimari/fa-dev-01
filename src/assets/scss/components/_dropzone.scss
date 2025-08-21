@@ -1,8 +1,9 @@
 // 
 // dropzone.scss
 // Vendor css override and new css added
-@import 'dropzone/dist/basic.css';
-@import 'dropzone/dist/dropzone.css';
+// Note: Dropzone CSS is not needed for react-dropzone
+// @import 'dropzone/dist/basic.css';
+// @import 'dropzone/dist/dropzone.css';
 
 // dropzone 
 .dropzone {

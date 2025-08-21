@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useRef, type FC } from 'react'
 import Zuck from 'zuck.js'
 
-import 'zuck.js/dist/zuck.css'
-import 'zuck.js/dist/skins/snapgram.css'
+// Note: CSS is imported through the main SCSS file to avoid import issues
 
 type Story = {
   id: string

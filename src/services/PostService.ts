@@ -147,22 +147,64 @@ export class PostService {
   }
 
   /**
-   * Get all posts for the feed
+   * Get all posts for the feed (only from connected users and own posts)
    */
   static async getPosts(limit: number = 20, nextToken?: string): Promise<{
     posts: PostData[]
     nextToken?: string
   }> {
     try {
+      const currentUser = await getCurrentUser()
+      const currentUserId = currentUser.userId
+      
+      // Get user's connections to filter posts
+      let connections: Array<{ id: string; friendId: string; inviterId: string; createdAt: string | null }> = []
+      try {
+        const { getConnections } = await import('./ConnectionService')
+        connections = await getConnections(currentUserId)
+      } catch (error) {
+        console.warn('Failed to load connections, showing only own posts:', error)
+      }
+      
+      // Create array of allowed user IDs (connections + current user)
+      const allowedUserIds = [
+        currentUserId, // Include own posts
+        ...connections.map(conn => conn.friendId) // Include posts from connected friends
+      ]
+      
+      console.log('Loading feed for user:', currentUserId)
+      console.log('User connections:', connections.length)
+      console.log('Allowed post authors:', allowedUserIds)
+
+      // If user has no connections, only show their own posts
+      if (connections.length === 0) {
+        console.log('User has no connections, showing only own posts')
+      }
+
       const result = await client.models.Post.list({
-        limit,
+        limit: limit * 2, // Get more posts since we'll filter them
         nextToken,
         authMode: 'userPool'
       })
 
+      // Filter posts to only include those from connected users or self
+      const filteredPosts = result.data.filter(post => {
+        if (!post.authorId) return false // Skip posts without author ID
+        const isAllowed = allowedUserIds.includes(post.authorId)
+        if (!isAllowed) {
+          console.log('Filtering out post from non-connected user:', post.authorId)
+        }
+        return isAllowed
+      })
+
+      // Take only the requested limit after filtering
+      const postsToProcess = filteredPosts.slice(0, limit)
+
+      console.log(`Loaded ${result.data.length} total posts, filtered to ${postsToProcess.length} from connected users`)
+
       // Process posts and regenerate image URLs from keys
       const posts: PostData[] = await Promise.all(
-        result.data.map(async (post) => {
+        postsToProcess.map(async (post) => {
           let freshImageUrls: string[] = []
           
           // Regenerate image URLs from keys to ensure they're not expired
@@ -278,6 +320,39 @@ export class PostService {
     } catch (error) {
       console.error('Error toggling like:', error)
       throw new Error('Failed to update like. Please try again.')
+    }
+  }
+
+  /**
+   * Debug method to check current user's connections
+   */
+  static async debugUserConnections(): Promise<void> {
+    try {
+      const currentUser = await getCurrentUser()
+      const currentUserId = currentUser.userId
+      
+      console.log('=== DEBUG USER CONNECTIONS ===')
+      console.log('Current user ID:', currentUserId)
+      console.log('Current user email:', currentUser.signInDetails?.loginId)
+      
+      const { getConnections } = await import('./ConnectionService')
+      const connections = await getConnections(currentUserId)
+      
+      console.log('Total connections:', connections.length)
+      connections.forEach((conn, index) => {
+        console.log(`Connection ${index + 1}:`, {
+          id: conn.id,
+          friendId: conn.friendId,
+          inviterId: conn.inviterId,
+          createdAt: conn.createdAt
+        })
+      })
+      
+      const allowedUserIds = [currentUserId, ...connections.map(conn => conn.friendId)]
+      console.log('Posts will be shown from these user IDs:', allowedUserIds)
+      console.log('=== END DEBUG ===')
+    } catch (error) {
+      console.error('Debug connections error:', error)
     }
   }
 }

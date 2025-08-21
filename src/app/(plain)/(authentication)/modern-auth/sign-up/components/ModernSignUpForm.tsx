@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button, Form, Alert, ProgressBar } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaGoogle, FaFacebookF, FaApple, FaCheck } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
-import { signUp } from 'aws-amplify/auth'
+import { signUp, confirmSignUp, getCurrentUser } from 'aws-amplify/auth'
+import { ConnectionService } from '@/services/ConnectionService'
+import { EmailInvitationService } from '@/services/EmailInvitationService'
 
 interface SignUpFormData {
   firstName: string
@@ -22,7 +24,35 @@ const ModernSignUpForm = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showConfirmForm, setShowConfirmForm] = useState(false)
+  const [confirmationCode, setConfirmationCode] = useState('')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  // Extract invitation token from URL parameters
+  const invitationToken = searchParams.get('token')
+  const [invitationData, setInvitationData] = useState<{inviterName: string; recipientName: string; recipientEmail: string; inviterAvatar?: string} | null>(null)
+
+  useEffect(() => {
+    // If user came from an invitation email, get invitation data from token
+    if (invitationToken) {
+      console.log('User registering with invitation token:', invitationToken)
+      const data = EmailInvitationService.getInvitationFromToken(invitationToken)
+      
+      if (data) {
+        setInvitationData(data)
+        console.log('Retrieved invitation data:', data)
+        localStorage.setItem('pendingInvitationContext', JSON.stringify({
+          inviterName: data.inviterName,
+          recipientName: data.recipientName,
+          inviterAvatar: data.inviterAvatar,
+          timestamp: Date.now()
+        }))
+      } else {
+        console.warn('Invalid or expired invitation token:', invitationToken)
+      }
+    }
+  }, [invitationToken])
 
   const schema = yup.object({
     firstName: yup.string().required('First name is required').min(2, 'First name must be at least 2 characters'),
@@ -74,7 +104,6 @@ const ModernSignUpForm = () => {
   const onSubmit = async (data: SignUpFormData) => {
     setLoading(true)
     setError('')
-    
     try {
       const { isSignUpComplete, userId, nextStep } = await signUp({
         username: data.email,
@@ -92,17 +121,12 @@ const ModernSignUpForm = () => {
       console.log('Sign up result:', { isSignUpComplete, userId, nextStep })
 
       if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
-        setSuccess(true)
-        // You might want to navigate to a confirmation page
-        // navigate('/modern-auth/confirm-signup', { state: { email: data.email } })
+        setShowConfirmForm(true)
       } else if (isSignUpComplete) {
-        // Auto sign in or navigate to sign in
         navigate('/modern-auth/sign-in')
       }
     } catch (err: any) {
       console.error('Sign up error:', err)
-      
-      // Handle specific error types
       if (err.name === 'UsernameExistsException') {
         setError('An account with this email address already exists.')
       } else if (err.name === 'InvalidPasswordException') {
@@ -115,12 +139,108 @@ const ModernSignUpForm = () => {
     }
   }
 
-  const handleSocialSignUp = (provider: string) => {
-    console.log(`Sign up with ${provider}`)
-    // Implement social sign up logic here
+  const handleConfirmSignUp = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      await confirmSignUp({ username: getValues('email'), confirmationCode })
+      
+      // After successful confirmation, handle any pending invitations
+      try {
+        const currentUser = await getCurrentUser()
+        console.log('Current user after registration:', currentUser)
+        
+        await ConnectionService.handleRegistration(getValues('email'), currentUser.userId)
+        console.log('Processed invitations for newly registered user')
+        
+        // Check if user came from a specific invitation link
+        const pendingInvitationContext = localStorage.getItem('pendingInvitationContext')
+        if (pendingInvitationContext) {
+          try {
+            const context = JSON.parse(pendingInvitationContext)
+            console.log('Processing invitation context from registration:', context)
+            
+            // TEMPORARY FIX: Force create notification for testing
+            // This ensures the user sees the friend request even if database invitation is missing
+            if (context.inviterName) {
+              console.log('Force creating notification for testing purposes...')
+              const { NotificationService } = await import('@/services/NotificationService')
+              const notificationResult = await NotificationService.createFriendRequestNotification(
+                currentUser.userId,
+                context.inviterName,
+                context.inviterAvatar // Include avatar in notification
+              )
+              console.log('Force-created notification result:', notificationResult)
+            }
+            
+            // Clear the pending invitation context
+            localStorage.removeItem('pendingInvitationContext')
+            // Set flag to redirect to notifications after auth
+            localStorage.setItem('justRegisteredFromInvitation', 'true')
+            // The invitation is already processed by handleRegistration above
+          } catch (parseError) {
+            console.warn('Could not parse invitation context:', parseError)
+          }
+        }
+      } catch (inviteError) {
+        console.warn('Could not process invitations:', inviteError)
+        // Don't fail the signup process if invitation processing fails
+      }
+      
+      setSuccess(true)
+      setShowConfirmForm(false)
+    } catch (err: any) {
+      setError(err.message || 'Failed to confirm sign-up. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Show success message if account needs confirmation
+  const handleSocialSignUp = async (provider: string) => {
+    console.log(`Social sign-up with ${provider} - feature not implemented yet`)
+    setError(`${provider} sign-up is not implemented yet. Please use email registration.`)
+  }
+
+  // Show confirmation form after registration if needed
+  if (showConfirmForm) {
+    return (
+      <div className="w-100 text-center">
+        <div className="d-inline-flex align-items-center justify-content-center bg-success rounded-circle p-3 mb-4"
+             style={{ width: '80px', height: '80px' }}>
+          <FaCheck className="text-white fs-2" />
+        </div>
+        <h1 className="h3 fw-bold text-dark mb-3">Check Your Email</h1>
+        <p className="text-muted mb-4">
+          We've sent a confirmation code to <strong>{getValues('email')}</strong>
+        </p>
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder="Confirmation Code"
+            value={confirmationCode}
+            onChange={(e) => setConfirmationCode(e.target.value)}
+            className="form-control"
+          />
+        </div>
+        <Button onClick={handleConfirmSignUp} disabled={loading}>
+          {loading ? 'Confirming...' : 'Confirm'}
+        </Button>
+        <div className="mt-4">
+          <Link to="/modern-auth/sign-in" className="text-primary fw-semibold text-decoration-none">
+            Back to Sign In
+          </Link>
+        </div>
+        {error && (
+          <Alert variant="danger" className="border-0 shadow-sm mt-3">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </Alert>
+        )}
+      </div>
+    )
+  }
+
+  // Show success message only after confirmation
   if (success) {
     return (
       <div className="w-100 text-center">
@@ -128,20 +248,15 @@ const ModernSignUpForm = () => {
              style={{ width: '80px', height: '80px' }}>
           <FaCheck className="text-white fs-2" />
         </div>
-        
-        <h1 className="h3 fw-bold text-dark mb-3">Check Your Email</h1>
+        <h1 className="h3 fw-bold text-dark mb-3">Registration Successful</h1>
         <p className="text-muted mb-4">
-          We've sent a confirmation link to <strong>{getValues('email')}</strong>
+          Your account has been confirmed. You can now sign in.
+          {invitationData?.inviterName && (
+            <><br /><strong>🎉 Great news!</strong> You'll see {invitationData.inviterName}'s friend request after signing in.</>
+          )}
         </p>
-        <p className="text-muted small mb-4">
-          Please click the link in your email to confirm your account.
-        </p>
-
         <div className="mt-4">
-          <Link 
-            to="/modern-auth/sign-in"
-            className="text-primary fw-semibold text-decoration-none"
-          >
+          <Link to="/modern-auth/sign-in" className="text-primary fw-semibold text-decoration-none">
             Back to Sign In
           </Link>
         </div>
@@ -160,6 +275,21 @@ const ModernSignUpForm = () => {
         <h1 className="h3 fw-bold text-dark mb-1">Create Account</h1>
         <p className="text-muted">Join our community today</p>
       </div>
+
+      {/* Invitation Banner */}
+      {invitationData?.inviterName && (
+        <Alert variant="info" className="border-0 shadow-sm mb-4">
+          <div className="d-flex align-items-center">
+            <i className="fas fa-envelope-open text-info me-3 fs-4"></i>
+            <div>
+              <strong>🎉 You're invited by {invitationData.inviterName}!</strong>
+              <div className="small text-muted mt-1">
+                After creating your account, you'll automatically see {invitationData.inviterName}'s friend request.
+              </div>
+            </div>
+          </div>
+        </Alert>
+      )}
 
       {/* Error Alert */}
       {error && (

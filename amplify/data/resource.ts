@@ -76,6 +76,29 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(sendInvitation)),
+
+  // Invitation model for storing and listing invited friends
+  Invitation: a
+    .model({
+      inviterId: a.string().required(),
+      inviterName: a.string().required(),
+      inviterAvatar: a.string(),
+      recipientEmail: a.string().required(),
+      status: a.string().default('pending'),
+      sentAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.authenticated()])
+    .secondaryIndexes((index) => [index("inviterId"), index("recipientEmail")]),
+
+  // Connections model for storing user connections
+  Connections: a
+    .model({
+      inviterId: a.string().required(),
+      friendId: a.string().required(),
+      createdAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.authenticated()])
+    .secondaryIndexes((index) => [index("inviterId"), index("friendId")]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
